@@ -29,7 +29,6 @@ int main()
     bpf_u_int32 net;
     bpf_u_int32 mask;
     u_char *payload;
-    int data_len, cl, paylen;
 
     dev = pcap_lookupdev(errbuf);
     if (dev == NULL) {
@@ -65,10 +64,14 @@ int main()
 
         eh = (struct ether_header *)packet;
         printf("*Ethernet Header\n");
-        for(int i=0; i<12; i++){
-            if      (i == 0) printf("Dst Mac Address: %02x ",   eh->ether_dhost[i]);
-            else if (i == 6) printf("\nSrc Mac Address: %02x ", eh->ether_shost[i]);
-            else             printf(" %02x ",packet[i]);
+
+        printf("Dst Mac Address: ");
+        for(int i=0; i<6; i++){
+            printf("%02x ", eh->ether_dhost[i]);
+        }
+        printf("\nSrc Mac Address: ");
+        for(int i=0; i<6; i++){
+            printf("%02x ", eh->ether_shost[i]);
         }
         printf("\n");
 
@@ -88,15 +91,16 @@ int main()
             printf("Dst Port: %d\n", ntohs(tcph->th_dport));
             printf("seq: %d\n", ntohs(tcph->seq));
 
+            int paylen;
             paylen = int(ntohs(iph->tot_len) - (iph->ihl * 4) - (tcph->th_off * 4));
             printf("paylen: %d\n", paylen);
 
             payload =(u_char *)(packet + (tcph->th_off * 4));
             printf("payload hexa Value\n");
-            data_len = header->caplen;
-            while(data_len--){
-                    printf("%02x ", *(payload++));
-                    if((++cl % 16) == 0) printf("\n");
+            int cl = 0;
+            while(paylen--){
+                printf("%02x ", *(payload++));
+                if((++cl % 16) == 0) printf("\n");
             }
             printf("\n\n");
         }
