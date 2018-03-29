@@ -28,6 +28,8 @@ int main()
     const u_char *packet;
     bpf_u_int32 net;
     bpf_u_int32 mask;
+    u_char *payload;
+    int data_len, cl, paylen;
 
     dev = pcap_lookupdev(errbuf);
     if (dev == NULL) {
@@ -84,8 +86,21 @@ int main()
             printf("*TCP Header\n");
             printf("Src Port: %d\n", ntohs(tcph->th_sport));
             printf("Dst Port: %d\n", ntohs(tcph->th_dport));
-            printf("\n");
+            printf("seq: %d\n", ntohs(tcph->seq));
+
+            paylen = int(ntohs(iph->tot_len) - (iph->ihl * 4) - (tcph->th_off * 4));
+            printf("paylen: %d\n", paylen);
+
+            payload =(u_char *)(packet + (tcph->th_off * 4));
+            printf("payload hexa Value\n");
+            data_len = header->caplen;
+            while(data_len--){
+                    printf("%02x ", *(payload++));
+                    if((++cl % 16) == 0) printf("\n");
+            }
+            printf("\n\n");
         }
+
     }
     pcap_close(handle);
     return 0;
