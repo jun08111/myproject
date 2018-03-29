@@ -58,10 +58,12 @@ int main()
     }
 
     while(1){
-
-        pcap_next_ex(handle, &header, &packet);
-        char buf[INET_ADDRSTRLEN];
-
+        int res = pcap_next_ex(handle, &header, &packet);
+        if      (res == 0) continue;      // 0: timeout expired
+        else if (res == -1 || res == -2){ //-1: error, -2: EOF
+            printf("Packet Reading Error");
+            break;
+        }
         eh = (struct ether_header *)packet;
         printf("*Ethernet Header\n");
 
@@ -76,6 +78,7 @@ int main()
         printf("\n");
 
         packet += sizeof(struct ether_header);
+        char buf[INET_ADDRSTRLEN];
         if (ntohs(eh->ether_type) == ETHERTYPE_IP){
             iph = (struct iphdr *)packet;
             printf("*IP Header\n");
