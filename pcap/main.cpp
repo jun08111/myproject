@@ -57,12 +57,12 @@ int main()
         return 2;
     }
 
-    while(1){
-        int res = pcap_next_ex(handle, &header, &packet);
-        if      (res == 0) continue;      // 0: timeout expired
-        else if (res == -1 || res == -2){ //-1: error, -2: EOF
-            printf("Packet Reading Error");
-            break;
+    while(int result = pcap_next_ex(handle, &header, &packet) >=0){
+        if      (result == 0)  continue;      //Timeout expired, There is no packet.
+        else if (result == -1) break;         //-1: error,Signal Lost
+        else if (result == -2){               //-2: EOF, No more packet from the packet savefile.
+                               fprintf(stderr, "No more packet from the packet savefile.");
+                               break;
         }
         eh = (struct ether_header *)packet;
         printf("*Ethernet Header\n");
