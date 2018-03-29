@@ -17,6 +17,61 @@ struct ether_header *eh;
 struct iphdr *iph;
 struct tcphdr *tcph;
 
+int ether_header(const u_char *);
+int ip_header(const u_char *);
+int tcp_header(const u_char *);
+
+int ether_header(const u_char *packet){
+    eh = (struct ether_header *)packet;
+    printf("*Ethernet Header\n");
+    printf("Dst Mac Address: ");
+    for(int i=0; i<6; i++){
+        printf("%02x ", eh->ether_dhost[i]);
+    }
+    printf("\nSrc Mac Address: ");
+    for(int i=0; i<6; i++){
+        printf("%02x ", eh->ether_shost[i]);
+    }
+    printf("\n");
+    return *packet;
+}
+
+int ip_header(const u_char *packet){
+    packet += sizeof(struct ether_header);
+    if (ntohs(eh->ether_type) == ETHERTYPE_IP){
+        iph = (struct iphdr *)packet;
+        char buf[INET_ADDRSTRLEN];
+        printf("*IP Header\n");
+        printf("Src IP Addr: %s\n", inet_ntop(AF_INET,&iph->saddr, buf, sizeof(buf))); //inet_ntop: binary -> human-readable text
+        printf("Dst IP Addr: %s\n", inet_ntop(AF_INET,&iph->daddr, buf, sizeof(buf)));
+    }
+    return *packet;
+}
+
+int tcp_header(const u_char *packet){
+    packet += iph->ihl * 4;
+    tcph = (struct tcphdr *) packet;
+    if(iph->protocol == IPPROTO_TCP){
+        printf("*TCP Header\n");
+        printf("Src Port: %d\n", ntohs(tcph->th_sport));
+        printf("Dst Port: %d\n", ntohs(tcph->th_dport));
+        printf("seq: %d\n", ntohs(tcph->seq));
+        int paylen = int(ntohs(iph->tot_len) - (iph->ihl * 4) - (tcph->th_off * 4));
+        printf("paylen: %d\n", paylen);
+
+        u_char *payload;
+        payload =(u_char *)(packet + (tcph->th_off * 4));
+        printf("payload hexa Value\n");
+        int cl = 0;
+        while(paylen--){
+            printf("%02x ", *(payload++));
+            if((++cl % 16) == 0) printf("\n");
+        }
+        printf("\n\n");
+    }
+    return *packet;
+}
+
 int main()
 {
     char *dev;
@@ -28,7 +83,7 @@ int main()
     const u_char *packet;
     bpf_u_int32 net;
     bpf_u_int32 mask;
-    u_char *payload;
+
 
     dev = pcap_lookupdev(errbuf);
     if (dev == NULL) {
@@ -60,13 +115,18 @@ int main()
     while(int result = pcap_next_ex(handle, &header, &packet) >=0){
         if      (result == 0)  continue;      //Timeout expired, There is no packet.
         else if (result == -1) break;         //-1: error,Signal Lost
-        else if (result == -2){               //-2: EOF, No more packet from the packet savefile.
-                               fprintf(stderr, "No more packet from the packet savefile.");
-                               break;
+        else if (result == -2)                //-2: EOF, No more packet from the packet savefile.
+        {
+            fprintf(stderr, "No more packet from the packet savefile.");
+            break;
         }
+        ether_header(packet);
+        ip_header(packet);
+        tcp_header(packet);
+
+/* original
         eh = (struct ether_header *)packet;
         printf("*Ethernet Header\n");
-
         printf("Dst Mac Address: ");
         for(int i=0; i<6; i++){
             printf("%02x ", eh->ether_dhost[i]);
@@ -107,7 +167,7 @@ int main()
             }
             printf("\n\n");
         }
-
+*/
     }
     pcap_close(handle);
     return 0;
