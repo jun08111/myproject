@@ -55,7 +55,6 @@ int tcp_header(const u_char *packet){
         printf("*TCP Header\n");
         printf("Src Port: %d\n", ntohs(tcph->th_sport));
         printf("Dst Port: %d\n", ntohs(tcph->th_dport));
-        printf("seq: %d\n", ntohs(tcph->seq));
         int paylen = int(ntohs(iph->tot_len) - (iph->ihl * 4) - (tcph->th_off * 4));
         printf("paylen: %d\n", paylen);
 
@@ -83,7 +82,6 @@ int main()
     const u_char *packet;
     bpf_u_int32 net;
     bpf_u_int32 mask;
-
 
     dev = pcap_lookupdev(errbuf);
     if (dev == NULL) {
@@ -122,9 +120,9 @@ int main()
         }
         ether_header(packet);
         ip_header(packet);
-        tcp_header(packet);
+        tcp_header(packet+sizeof(struct ether_header));
 
-/* original
+/* no function
         eh = (struct ether_header *)packet;
         printf("*Ethernet Header\n");
         printf("Dst Mac Address: ");
@@ -152,7 +150,6 @@ int main()
             printf("*TCP Header\n");
             printf("Src Port: %d\n", ntohs(tcph->th_sport));
             printf("Dst Port: %d\n", ntohs(tcph->th_dport));
-            printf("seq: %d\n", ntohs(tcph->seq));
 
             int paylen;
             paylen = int(ntohs(iph->tot_len) - (iph->ihl * 4) - (tcph->th_off * 4));
