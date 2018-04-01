@@ -17,41 +17,22 @@ struct ether_header *eh;
 struct iphdr *iph;
 struct tcphdr *tcph;
 
-int ether_header(const u_int8_t *);
-int ip_header(const u_int8_t *);
-int tcp_header(const u_int8_t *);
+void ether_header(const u_int8_t *);
+void ip_header(const u_int8_t *);
+void tcp_header(const u_int8_t *);
 
-int ether_header(const u_int8_t *packet){
+void ether_header(const u_int8_t *packet){
     eh = (struct ether_header *)packet;
-    printf("*Ethernet Header\n");
-    printf("Dst Mac Address: ");
-    for(int i=0; i<6; i++){
-        printf("%02x ", eh->ether_dhost[i]);
-    }
-    printf("\nSrc Mac Address: ");
-    for(int i=0; i<6; i++){
-        printf("%02x ", eh->ether_shost[i]);
+    printf("*Ethernet Header");
+    for(int i=0; i<12; i++){
+        if     (i==0) printf("\nDst Mac Address: %02x ", packet[i]);
+        else if(i==6) printf("\nSrc Mac Address: %02x ", packet[i]);
+        else          printf("%02x ", packet[i]);
     }
     printf("\n");
-    return *packet;
 }
 
-int ether_header(const u_int8_t *packet){
-    eh = (struct ether_header *)packet;
-    printf("*Ethernet Header\n");
-    printf("Dst Mac Address: ");
-    for(int i=0; i<6; i++){
-        printf("%02x ", eh->ether_dhost[i]);
-    }
-    printf("\nSrc Mac Address: ");
-    for(int i=0; i<6; i++){
-        printf("%02x ", eh->ether_shost[i]);
-    }
-    printf("\n");
-    return *packet;
-}
-
-int ip_header(const u_int8_t *packet){
+void ip_header(const u_int8_t *packet){
     packet += sizeof(struct ether_header);
     if (ntohs(eh->ether_type) == ETHERTYPE_IP){
         iph = (struct iphdr *)packet;
@@ -60,10 +41,9 @@ int ip_header(const u_int8_t *packet){
         printf("Src IP Addr: %s\n", inet_ntop(AF_INET,&iph->saddr, buf, sizeof(buf))); //inet_ntop: binary -> human-readable text
         printf("Dst IP Addr: %s\n", inet_ntop(AF_INET,&iph->daddr, buf, sizeof(buf)));
     }
-    return *packet;
 }
 
-int tcp_header(const u_int8_t *packet){
+void tcp_header(const u_int8_t *packet){
     packet += iph->ihl * 4;
     tcph = (struct tcphdr *) packet;
     if(iph->protocol == IPPROTO_TCP){
@@ -83,7 +63,6 @@ int tcp_header(const u_int8_t *packet){
         }
         printf("\n\n");
     }
-    return *packet;
 }
 
 int main()
