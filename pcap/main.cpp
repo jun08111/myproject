@@ -17,11 +17,11 @@ struct ether_header *eh;
 struct iphdr *iph;
 struct tcphdr *tcph;
 
-int ether_header(const u_char *);
-int ip_header(const u_char *);
-int tcp_header(const u_char *);
+int ether_header(const u_int8_t *);
+int ip_header(const u_int8_t *);
+int tcp_header(const u_int8_t *);
 
-int ether_header(const u_char *packet){
+int ether_header(const u_int8_t *packet){
     eh = (struct ether_header *)packet;
     printf("*Ethernet Header\n");
     printf("Dst Mac Address: ");
@@ -36,7 +36,22 @@ int ether_header(const u_char *packet){
     return *packet;
 }
 
-int ip_header(const u_char *packet){
+int ether_header(const u_int8_t *packet){
+    eh = (struct ether_header *)packet;
+    printf("*Ethernet Header\n");
+    printf("Dst Mac Address: ");
+    for(int i=0; i<6; i++){
+        printf("%02x ", eh->ether_dhost[i]);
+    }
+    printf("\nSrc Mac Address: ");
+    for(int i=0; i<6; i++){
+        printf("%02x ", eh->ether_shost[i]);
+    }
+    printf("\n");
+    return *packet;
+}
+
+int ip_header(const u_int8_t *packet){
     packet += sizeof(struct ether_header);
     if (ntohs(eh->ether_type) == ETHERTYPE_IP){
         iph = (struct iphdr *)packet;
@@ -48,7 +63,7 @@ int ip_header(const u_char *packet){
     return *packet;
 }
 
-int tcp_header(const u_char *packet){
+int tcp_header(const u_int8_t *packet){
     packet += iph->ihl * 4;
     tcph = (struct tcphdr *) packet;
     if(iph->protocol == IPPROTO_TCP){
@@ -58,8 +73,8 @@ int tcp_header(const u_char *packet){
         int paylen = int(ntohs(iph->tot_len) - (iph->ihl * 4) - (tcph->th_off * 4));
         printf("paylen: %d\n", paylen);
 
-        u_char *payload;
-        payload =(u_char *)(packet + (tcph->th_off * 4));
+        u_int8_t *payload;
+        payload =(u_int8_t *)(packet + (tcph->th_off * 4));
         printf("payload hexa Value\n");
         int cl = 0;
         while(paylen--){
@@ -122,7 +137,7 @@ int main()
         ip_header(packet);
         tcp_header(packet+sizeof(struct ether_header));
 
-/* no function
+/* not use function
         eh = (struct ether_header *)packet;
         printf("*Ethernet Header\n");
         printf("Dst Mac Address: ");
