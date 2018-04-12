@@ -13,43 +13,109 @@
 
 using namespace std;
 
+struct FrameCtrl{
+    u_int8_t   protocol_ver : 2;
+    u_int8_t   type         : 2;
+    u_int8_t   sub_type     : 4;
+    u_int8_t   to_ds        : 1;
+    u_int8_t   from_ds      : 1;
+    u_int8_t   more_flag    : 1;
+    u_int8_t   retry        : 1;
+    u_int8_t   power_mgmt   : 1;
+    u_int8_t   more_data    : 1;
+    u_int8_t   wep          : 1;
+    u_int8_t   rsvd         : 1;
+};
+
 struct IEEE_header{
-    u_int16_t   fc;         //2 bytes
-    u_int16_t   duration;   //2 bytes
-    u_int8_t    da[5];      //6 bytes
-    u_int8_t    sa[5];      //6 bytes
-    u_int8_t    bssid[5];   //6 bytes
-    u_int16_t   seq_ctrl;   //2 bytes
+    struct FrameCtrl  frame_ctrl; //2 bytes
+           u_int16_t  duration;   //2 bytes
+           u_int8_t   addr1[5];   //6 bytes
+           u_int8_t   addr2[5];   //6 bytes
+           u_int8_t   addr3[5];   //6 bytes
+           u_int16_t  seq_ctrl;   //2 bytes
+           u_int8_t   addr4[5];   //6 bytes
 };
 
 void IEEE_header(const u_int8_t *);
+void Addr1234(const u_int8_t *);
 
 void IEEE_header(const u_int8_t *packet){
     struct IEEE_header *IEh;
-    IEh = (struct IEEE_header *)(packet+40);
+    IEh = (struct IEEE_header *)(packet+24);
 
-    printf(" *IEEE 802.11 Header\n");
-    printf(" Frame Control: 0x%04x\n",ntohs(IEh->fc));
+//* Room-833 (Change  i to Radiotap Header Length)
+    printf("*IEEE 802.11 Header\n");
+  //printf(" Frame Control: 0x%04x\n", ntohs(IEh->frame_ctrl));
+    printf(" To   DS:  %d\n", IEh->frame_ctrl.to_ds);
+    printf(" From DS:  %d\n", IEh->frame_ctrl.from_ds);
     printf(" Duration: %d", IEh->duration);
-    for(int i=0; i<18; i++){
-        if     (i==0)  printf("\n da:    %02x ", packet[i+44]);
-        else if(i==6)  printf("\n sa:    %02x ", packet[i+44]);
-        else if(i==12) printf("\n BSSID: %02x ", packet[i+44]);
-        else           printf("%02x ", packet[i+44]);
-    }
-    printf("\n Seq_Ctrl: %d\n", IEh->seq_ctrl);
-    printf(" Seq_Ctrl: %02x%02x\n", packet[62],packet[63]);
+    Addr1234(packet);
+    printf("\n");
 
-    /*
-    printf("Frame Control: %02x%02x\n",packet[40],packet[41]);
-    printf("Duration: %02x%02x\n", packet[42],packet[43]);
-    printf("da:    %02x %02x %02x %02x %02x %02x\n", packet[44],packet[45],packet[46],packet[47],packet[48],packet[49]);
-    printf("sa:    %02x %02x %02x %02x %02x %02x\n", packet[50],packet[51],packet[52],packet[53],packet[54],packet[55]);
-    printf("BSSID: %02x %02x %02x %02x %02x %02x\n", packet[56],packet[57],packet[58],packet[59],packet[60],packet[61]);
-    printf("SequncControl: %02x%02x\n", packet[62],packet[63]);
-    */
+/*  My House
+    IEh = (struct IEEE_header *)(packet+40);
+    printf("\n da:    %02x ", packet[i+44]);
+
+*/
     printf("---------------------------------------------------------------------------");
     printf("\n");
+}
+
+void Addr1234(const u_int8_t *packet){
+    struct IEEE_header *IEh;
+    IEh = (struct IEEE_header *)(packet+24);
+    u_int8_t td = IEh->frame_ctrl.to_ds;
+    u_int8_t fd = IEh->frame_ctrl.from_ds;
+    switch(td)
+    {
+        case 0: switch(fd)
+        {
+                    case 0:  for(int i=0; i<18; i++){
+                                if     (i==0)  printf("\n Receiver    STA: %02x ", packet[i+28]);
+                                else if(i==6)  printf("\n Transmitter STA: %02x ", packet[i+28]);
+                                else if(i==12) printf("\n BSSID          : %02x ", packet[i+28]);
+                                else           printf("%02x ", packet[i+28]);
+                                }
+                             break;
+
+                    case 1:  for(int i=0; i<18; i++){
+                                if     (i==0)  printf("\n Receiver        STA2: %02x ", packet[i+28]);
+                                else if(i==6)  printf("\n Transmitter      AP2: %02x ", packet[i+28]);
+                                else if(i==12) printf("\n 1st Transmitter STA1: %02x ", packet[i+28]);
+                                else           printf("%02x ", packet[i+28]);
+                                }
+                             break;
+                    default: printf("ERROR\n");
+                             break;
+         }
+        break;
+
+        case 1: switch(fd)
+        {
+                    case 0:  for(int i=0; i<18; i++){
+                                if     (i==0)  printf("\n Receiver       AP1: %02x ", packet[i+28]);
+                                else if(i==6)  printf("\n Transmitter   STA1: %02x ", packet[i+28]);
+                                else if(i==12) printf("\n Last Receiver STA2: %02x ", packet[i+28]);
+                                else           printf("%02x ", packet[i+28]);
+                                }
+                             break;
+
+                    case 1:  for(int i=0; i<26; i++){
+                                if     (i==0)  printf("\n Receiver       AP2: %02x ", packet[i+28]);
+                                else if(i==6)  printf("\n Transmitter    AP1: %02x ", packet[i+28]);
+                                else if(i==12) printf("\n Receiver      STA2: %02x ", packet[i+28]);
+                                else if(i==18) printf("\n To DS: 1,");
+                                else if(i==19) printf(" From DS: 1");
+                                else if(i==20) printf("\n Receiver      STA1: %02x ", packet[i+28]);
+                                else           printf("%02x ", packet[i+28]);
+                                }
+                             break;
+                    default: printf("ERROR\n");
+                             break;
+        }
+        break;
+    }
 }
 
 int main(int argc, char* argv[])
