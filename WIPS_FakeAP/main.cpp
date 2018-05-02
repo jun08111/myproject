@@ -2,15 +2,11 @@
 
 void WlanHeader(const u_int8_t *packet)
 {
+    struct RadiotapHeader *radiotapH = (struct RadiotapHeader *)packet;
     struct WlanHeader *wlanH;
-    packet += sizeof(struct RadiotapHeader);
-    wlanH = (struct WlanHeader *)packet;
-    //for(int i=0;i<100;i++)printf("%02x ", packet[i]);
-    printf("*Wlan Header 802.11 Header\n");
-    printf(" To   DS:  %d\n", wlanH->frameCtrl.toDs);
-    printf(" From DS:  %d", wlanH->frameCtrl.fromDs);
-    Addr1234(packet);
-    printf("\n-------------------------------------------------------------------------\n");
+    wlanH = (struct WlanHeader *)(packet + radiotapH->length);
+
+    Addr1234(packet + radiotapH->length);
 }
 
 void Addr1234(const u_int8_t *packet)
@@ -24,16 +20,14 @@ void Addr1234(const u_int8_t *packet)
     {
     case 0: switch(fd)
             {
-            case 0:
-                     printf("\n Receiver    STA: %02x %02x %02x %02x %02x %02x ", wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter STA: %02x %02x %02x %02x %02x %02x ", wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n BSSID          : %02x %02x %02x %02x %02x %02x ", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
-                     break;
+            case 0:  break;
 
             case 1:
-                     printf("\n Receiver        STA2: %02x %02x %02x %02x %02x %02x ", wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter      AP2: %02x %02x %02x %02x %02x %02x ", wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n 1st Transmitter STA1: %02x %02x %02x %02x %02x %02x ", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
+                     printf(" To   DS:  %d\n", td);
+                     printf(" From DS:  %d", fd);
+                     printf("\n Receiver        STA2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
+                     printf("\n Transmitter      AP2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
+                     printf("\n 1st Transmitter STA1: %02x %02x %02x %02x %02x %02x \n\n", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
                      break;
 
             default: printf("ERROR\n");
@@ -44,16 +38,20 @@ void Addr1234(const u_int8_t *packet)
     case 1: switch(fd)
             {
             case 0:
-                     printf("\n Receiver      STA:  %02x %02x %02x %02x %02x %02x ", wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter   STA:  %02x %02x %02x %02x %02x %02x ", wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n Last Receiver STA2: %02x %02x %02x %02x %02x %02x ", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
+                     printf(" To   DS:  %d\n", td);
+                     printf(" From DS:  %d", fd);
+                     printf("\n Receiver      STA:  %02x %02x %02x %02x %02x %02x ",     wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
+                     printf("\n Transmitter   STA:  %02x %02x %02x %02x %02x %02x ",     wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
+                     printf("\n Last Receiver STA2: %02x %02x %02x %02x %02x %02x \n\n", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
                      break;
 
             case 1:
-                     printf("\n Receiver       AP2: %02x %02x %02x %02x %02x %02x ", wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter    AP1: %02x %02x %02x %02x %02x %02x ", wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n Receiver      STA2: %02x %02x %02x %02x %02x %02x ", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
-                     printf("\n Receiver      STA1: %02x %02x %02x %02x %02x %02x ", wlanH->addr4[0], wlanH->addr4[1], wlanH->addr4[2], wlanH->addr4[3] ,wlanH->addr4[4], wlanH->addr4[5]);
+                     printf(" To   DS:  %d\n", td);
+                     printf(" From DS:  %d", fd);
+                     printf("\n Receiver       AP2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
+                     printf("\n Transmitter    AP1: %02x %02x %02x %02x %02x %02x ",     wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
+                     printf("\n Receiver      STA2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
+                     printf("\n Receiver      STA1: %02x %02x %02x %02x %02x %02x \n\n", wlanH->addr4[0], wlanH->addr4[1], wlanH->addr4[2], wlanH->addr4[3] ,wlanH->addr4[4], wlanH->addr4[5]);
                      break;
 
             default: printf("ERROR\n");
@@ -108,6 +106,7 @@ int main(int argc, char* argv[])
         }
 
         WlanHeader(packet);
+
     }
     pcap_close(handle);
     return 0;

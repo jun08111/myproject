@@ -10,8 +10,11 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <net/ethernet.h>
+#include <tins/radiotap.h>
+#include <tins/tins.h>
 
 using namespace std;
+using namespace Tins;
 
 #pragma pack(push, 1)
 struct RadiotapHeader {
@@ -31,17 +34,17 @@ struct RadiotapHeader {
 };
 
 struct FrameCtrl{
-    u_int8_t   protocolVer : 2;
-    u_int8_t   type        : 2;
-    u_int8_t   subType     : 4;
-    u_int8_t   toDs        : 1;
-    u_int8_t   fromDs      : 1;
-    u_int8_t   moreFlag    : 1;
-    u_int8_t   retry       : 1;
-    u_int8_t   powerMgmt   : 1;
-    u_int8_t   moreData    : 1;
-    u_int8_t   wep         : 1;
-    u_int8_t   rsvd        : 1;
+    u_int8_t   protocolVer    : 2;
+    u_int8_t   type           : 2;
+    u_int8_t   subType        : 4;
+    u_int8_t   toDs           : 1;
+    u_int8_t   fromDs         : 1;
+    u_int8_t   moreFlag       : 1;
+    u_int8_t   retry          : 1;
+    u_int8_t   powerMgmt      : 1;
+    u_int8_t   moreData       : 1;
+    u_int8_t   protectedFrame : 1;
+    u_int8_t   order          : 1;
 };
 
 struct WlanHeader{
@@ -54,10 +57,11 @@ struct WlanHeader{
            u_int8_t   addr4[6];   //6 bytes
 };
 
-struct ApMacAddr{
-    u_int8_t apMac[5];
+struct ApMacAddr
+{
+    u_int8_t apMac[6];
 };
 #pragma pack(pop)
 
 void WlanHeader(const u_int8_t *);
-void Addr1234(const u_int8_t *packet);
+void Addr1234(const u_int8_t *);
