@@ -1,63 +1,58 @@
 #include "main.h"
 
-void WlanHeader(const u_int8_t *packet)
+void fakeAp(const uint8_t *packet)
 {
-    struct RadiotapHeader *radiotapH = (struct RadiotapHeader *)packet;
     struct WlanHeader *wlanH;
+    struct RadiotapHeader *radiotapH;
+
+    radiotapH = (struct RadiotapHeader *)packet;
     wlanH = (struct WlanHeader *)(packet + radiotapH->length);
 
-    Addr1234(packet + radiotapH->length);
-}
+    uint8_t type = wlanH->frameCtrl.type;
+    uint8_t subtype = wlanH->frameCtrl.subType;
 
-void Addr1234(const u_int8_t *packet)
-{
-    struct WlanHeader *wlanH;
-    wlanH = (struct WlanHeader *)packet;
-    u_int8_t td = wlanH->frameCtrl.toDs;
-    u_int8_t fd = wlanH->frameCtrl.fromDs;
 
-    switch(td)
+    if(type==0 && subtype==8)  //BeconFrame
     {
-    case 0: switch(fd)
+        struct List *list;
+        //BSSID***********************************************************************************//
+        printf("BSSID: ");
+        for(int i=0; i<6; i++)
+        {
+            printf("%02x ", wlanH->addr3[i]);
+        }
+        printf("\n");
+
+        //SSID************************************************************************************//
+        packet += (radiotapH->length + sizeof(struct WlanHeader) + sizeof(struct BeaconFrameBody));
+        list = (struct List *)packet;
+        printf("SSID:  ");
+        for(int i=0; i<32; i++)
+        {
+            if(packet[i] == 1)
+                break;
+
+            printf("%c ", list->ssid[i]);
+        }
+        printf("\n\n");
+
+        //Check White or Black*******************************************************************//
+        if(wlanH->addr3[]^WhiteListApMac[] == 0)
+        {
+            if(list->ssid[i]^WhiteListSSID[] == 0)
             {
-            case 0:  break;
-
-            case 1:
-                     printf(" To   DS:  %d\n", td);
-                     printf(" From DS:  %d", fd);
-                     printf("\n Receiver        STA2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter      AP2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n 1st Transmitter STA1: %02x %02x %02x %02x %02x %02x \n\n", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
-                     break;
-
-            default: printf("ERROR\n");
-                     break;
+                BlackList
             }
-            break;
-
-    case 1: switch(fd)
+        }
+        if(list->ssid[i]^WhiteListSSID[] == 0)
+        {
+            if(wlanH->addr3[]^WhiteListApMac[] == 0)
             {
-            case 0:
-                     printf(" To   DS:  %d\n", td);
-                     printf(" From DS:  %d", fd);
-                     printf("\n Receiver      STA:  %02x %02x %02x %02x %02x %02x ",     wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter   STA:  %02x %02x %02x %02x %02x %02x ",     wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n Last Receiver STA2: %02x %02x %02x %02x %02x %02x \n\n", wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
-                     break;
-
-            case 1:
-                     printf(" To   DS:  %d\n", td);
-                     printf(" From DS:  %d", fd);
-                     printf("\n Receiver       AP2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr1[0], wlanH->addr1[1], wlanH->addr1[2], wlanH->addr1[3] ,wlanH->addr1[4], wlanH->addr1[5]);
-                     printf("\n Transmitter    AP1: %02x %02x %02x %02x %02x %02x ",     wlanH->addr2[0], wlanH->addr2[1], wlanH->addr2[2], wlanH->addr2[3] ,wlanH->addr2[4], wlanH->addr2[5]);
-                     printf("\n Receiver      STA2: %02x %02x %02x %02x %02x %02x ",     wlanH->addr3[0], wlanH->addr3[1], wlanH->addr3[2], wlanH->addr3[3] ,wlanH->addr3[4], wlanH->addr3[5]);
-                     printf("\n Receiver      STA1: %02x %02x %02x %02x %02x %02x \n\n", wlanH->addr4[0], wlanH->addr4[1], wlanH->addr4[2], wlanH->addr4[3] ,wlanH->addr4[4], wlanH->addr4[5]);
-                     break;
-
-            default: printf("ERROR\n");
-                     break;
+                BlackList
             }
-            break;
+        }
+        //****************************************************************************************//
+
     }
 }
 
@@ -67,7 +62,7 @@ int main(int argc, char* argv[])
     pcap_t *handle;
     char errbuf[PCAP_ERRBUF_SIZE];
     struct pcap_pkthdr *header;
-    const u_int8_t *packet;
+    const uint8_t *packet;
 
     if (argc != 2)
     {
@@ -105,7 +100,7 @@ int main(int argc, char* argv[])
             break;
         }
 
-        WlanHeader(packet);
+        fakeAp(packet);
 
     }
     pcap_close(handle);
