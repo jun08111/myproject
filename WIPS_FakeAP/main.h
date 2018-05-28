@@ -46,7 +46,7 @@ struct FrameCtrl
     uint8_t   order          : 1;
 };
 
-struct WlanHeader
+struct ManagementFrame
 {
     struct FrameCtrl  frameCtrl;  //2 bytes
            uint16_t   duration;   //2 bytes
@@ -61,11 +61,15 @@ struct BeaconFrameBody
     uint64_t  timestamp;
     uint16_t  beaconInterval;
     uint16_t  capacityInformation;
+};
+
+struct TagBody
+{
     uint8_t   elementID;
     uint8_t   tagLength;
 };
 
-struct List
+struct WifiName
 {
     uint8_t ssid[32];
 };

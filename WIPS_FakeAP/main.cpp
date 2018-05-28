@@ -2,56 +2,40 @@
 
 void fakeAp(const uint8_t *packet)
 {
-    struct WlanHeader *wlanH;
+    struct ManagementFrame *mgmtFrame;
     struct RadiotapHeader *radiotapH;
 
     radiotapH = (struct RadiotapHeader *)packet;
-    wlanH = (struct WlanHeader *)(packet + radiotapH->length);
+    mgmtFrame = (struct ManagementFrame *)(packet + radiotapH->length);
 
-    uint8_t type = wlanH->frameCtrl.type;
-    uint8_t subtype = wlanH->frameCtrl.subType;
+    uint8_t type = mgmtFrame->frameCtrl.type;
+    uint8_t subtype = mgmtFrame->frameCtrl.subType;
 
 
     if(type==0 && subtype==8)  //BeconFrame
     {
-        struct List *list;
+        struct WifiName *wifiName;
         //BSSID***********************************************************************************//
         printf("BSSID: ");
         for(int i=0; i<6; i++)
         {
-            printf("%02x ", wlanH->addr3[i]);
+            printf("%02x ", mgmtFrame->addr3[i]);
         }
         printf("\n");
 
         //SSID************************************************************************************//
-        packet += (radiotapH->length + sizeof(struct WlanHeader) + sizeof(struct BeaconFrameBody));
-        list = (struct List *)packet;
+        packet += (radiotapH->length + sizeof(struct ManagementFrame) + sizeof(struct BeaconFrameBody) + sizeof(struct TagBody));
+        wifiName = (struct WifiName *)packet;
         printf("SSID:  ");
         for(int i=0; i<32; i++)
         {
             if(packet[i] == 1)
                 break;
 
-            printf("%c ", list->ssid[i]);
+            printf("%c", wifiName->ssid[i]);
         }
         printf("\n\n");
 
-        //Check White or Black*******************************************************************//
-        if(wlanH->addr3[]^WhiteListApMac[] == 0)
-        {
-            if(list->ssid[i]^WhiteListSSID[] == 0)
-            {
-                BlackList
-            }
-        }
-        if(list->ssid[i]^WhiteListSSID[] == 0)
-        {
-            if(wlanH->addr3[]^WhiteListApMac[] == 0)
-            {
-                BlackList
-            }
-        }
-        //****************************************************************************************//
 
     }
 }
