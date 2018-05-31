@@ -4,17 +4,19 @@ void fakeAp(const uint8_t *packet)
 {
     struct ManagementFrame *mgmtFrame;
     struct RadiotapHeader *radiotapH;
+    struct WifiName *wifiName;
+    struct TagBody *tagBody;
 
     radiotapH = (struct RadiotapHeader *)packet;
     mgmtFrame = (struct ManagementFrame *)(packet + radiotapH->length);
+    tagBody   = (struct TagBody *)(packet + radiotapH->length + sizeof(struct ManagementFrame) + sizeof(struct BeaconFrameBody));
+    wifiName  = (struct WifiName *)(packet + radiotapH->length + sizeof(struct ManagementFrame) + sizeof(struct BeaconFrameBody) + sizeof(struct TagBody));
 
     uint8_t type = mgmtFrame->frameCtrl.type;
     uint8_t subtype = mgmtFrame->frameCtrl.subType;
 
-
     if(type==0 && subtype==8)  //BeconFrame
     {
-        struct WifiName *wifiName;
         //BSSID***********************************************************************************//
         printf("BSSID: ");
         for(int i=0; i<6; i++)
@@ -23,20 +25,23 @@ void fakeAp(const uint8_t *packet)
         }
         printf("\n");
 
+        //SSID length*****************************************************************************//
+        printf("SSID length: %d\n", tagBody->tagLength);
+
         //SSID************************************************************************************//
-        packet += (radiotapH->length + sizeof(struct ManagementFrame) + sizeof(struct BeaconFrameBody) + sizeof(struct TagBody));
-        wifiName = (struct WifiName *)packet;
         printf("SSID:  ");
         for(int i=0; i<32; i++)
         {
-            if(packet[i] == 1)
+            if(wifiName->ssid[i] == 1)
                 break;
-
-            printf("%c", wifiName->ssid[i]);
+            else
+                printf("%c", wifiName->ssid[i]);
         }
+        printf("\n");
+
+        //Sequence Control*************************************************************************//
+        printf("Sequence Control: %04x", ntohs(mgmtFrame->seq_ctrl));
         printf("\n\n");
-
-
     }
 }
 
