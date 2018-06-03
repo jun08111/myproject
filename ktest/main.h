@@ -338,7 +338,7 @@ public:
 
             for(int j = 0; j < total_values; j++)
             {
-                cout << clusters[i].getCentralValue(j) << " \n"; //compare with WhiteList.RSS
+                cout << setw(2) << hex << clusters[i].getCentralValue(j) << " \n"; //compare with WhiteList.RSS
             }
         }
         cout << "\n";
@@ -346,5 +346,4 @@ public:
 };
 
 void fakeAp(const uint8_t *);
-void getKrss(const uint8_t * );
-void kmeanAlgo(uint16_t countpacket, char *rss);
+void kmeanAlgo(uint16_t countpacket, uint8_t *rss);

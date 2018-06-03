@@ -45,7 +45,7 @@ void fakeAp(const uint8_t *packet)
     }
 }
 
-void kmeanAlgo(uint16_t countpacket, char *rss)
+void kmeanAlgo(uint16_t countpacket, uint8_t *rss)
 {
     srand (time(NULL));
 
@@ -79,7 +79,6 @@ void kmeanAlgo(uint16_t countpacket, char *rss)
     }
     KMeans kmeans(K, total_points, total_values, max_iterations); //(ap count, packet count, 1(RSS), how many times u want to check)
     kmeans.run(points);
-
 }
 
 int main(int argc, char* argv[])
@@ -125,20 +124,21 @@ int main(int argc, char* argv[])
             fprintf(stderr, "No more packet from the packet savefile.");
             break;
         }
+
         fakeAp(packet);
 
-        uint16_t countpacket;
+        uint16_t cntpacket;
         uint8_t i;
-        char rss[1000];
+        uint8_t rss[1000];
         struct RadiotapHeader *radiotapH;
         radiotapH = (struct RadiotapHeader *)packet;
 
         rss[i]=radiotapH->ssiSignal_1;
-        i++, countpacket++;
+        i++, cntpacket++;
 
-        if(countpacket % 10 == 1)
+        if(cntpacket % 10 == 1)
         {
-            kmeanAlgo(countpacket, rss);
+            kmeanAlgo(cntpacket, rss);
         }
     }
     pcap_close(handle);
