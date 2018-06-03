@@ -1,34 +1,32 @@
 #include <tins/tins.h>
 #include <iostream>
 #include <cassert>
-#include <vector>
+
 using namespace Tins;
 using namespace std;
 
-bool addr1234(PDU& packet)
+bool tinsPcap(PDU& packet)
 {
-    const Dot11Data& dot11  = packet.rfind_pdu<Dot11Data>();
-    const ARP& arp  = packet.rfind_pdu<ARP>();
+    const EthernetII& eth = packet.rfind_pdu<EthernetII>();
+    cout << "Dst Mac Address: " << eth.dst_addr() << endl
+         << "Src Mac Address: " << eth.src_addr() << endl;
 
-    if (dot11.from_ds() && !dot11.to_ds())
+    const IP& ip = packet.rfind_pdu<IP>();
+    cout << "Src IP Addr: " << ip.src_addr() << endl
+         << "Dst IP Addr: " << ip.dst_addr() << endl;
+
+    const TCP& tcp = packet.rfind_pdu<TCP>();
+    cout << "Src Port: " << tcp.sport() << endl
+         << "Dst Port: " << tcp.dport() << endl << endl;
+
+    const RawPDU& rawPDU = packet.rfind_pdu<RawPDU>();
+    cout << "Pay load: " << endl;
+    for(int i=0; i<rawPDU.size(); i++)
     {
-        cout << "addr1 BSSID: " << dot11.addr1() <<endl
-             << "addr2 Src:   " << dot11.addr2() <<endl
-             << "addr3 Dst:   " << dot11.addr3() <<endl
-             << "Sender Mac:   " << arp.sender_hw_addr() <<endl
-             << "Target Mac:   " << arp.target_hw_addr() <<endl
-
-             << endl;
-    }
-
-    else if (!dot11.from_ds() && dot11.to_ds())
-    {
-        cout << "addr1 Dst:   " << dot11.addr1() <<endl
-             << "addr2 BSSID: " << dot11.addr2() <<endl
-             << "addr3 Src:   " << dot11.addr3() <<endl
-             << "Sender Mac:   " << arp.sender_hw_addr() <<endl
-             << "Target Mac:   " << arp.target_hw_addr() <<endl
-             << endl;
+        if(i%16==0)
+            cout<<endl;
+        cout<<setfill('0');
+        cout<<setw(2)<<hex<<(int)rawPDU.payload().data()[i]<<" ";
     }
 
     return true;
@@ -37,17 +35,12 @@ bool addr1234(PDU& packet)
 int main()
 {
     SnifferConfiguration config;
+    config.set_filter("port 80");
     config.set_promisc_mode(true);
     config.set_immediate_mode(true);
-    Sniffer sniffer("wlan1", config);
-
-    auto decrypt_proxy = Crypto::make_wpa2_decrypter_proxy(&addr1234);
-    decrypt_proxy.decrypter().add_ap_data("information", "833");
-    sniffer.sniff_loop(decrypt_proxy);
+    Sniffer sniffer("wlan0", config);
+    sniffer.sniff_loop(tinsPcap);
 
     return 0;
 }
 
-//const ARP& arp  = packet.rfind_pdu<ARP>();
-//<< "Sender Mac:   " << arp.sender_hw_addr() <<endl
-//<< "Target Mac:   " << arp.target_hw_addr() <<endl
