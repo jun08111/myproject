@@ -45,15 +45,15 @@ void fakeAp(const uint8_t *packet)
     }
 }
 
-void kmeanAlgo(uint16_t countpacket, uint8_t *rss)
+void kmeanAlgo(uint16_t countpacket, char *rss)
 {
     srand (time(NULL));
 
-    int total_points = countpacket;//countpacket;
+    uint16_t total_points = countpacket;//countpacket;
     int K = 3;
     int total_values = 1;
     int has_name = 0;
-    int max_iterations = 3000;
+    int max_iterations = 500;
 
     vector<Point> points;
     string point_name;
@@ -61,9 +61,9 @@ void kmeanAlgo(uint16_t countpacket, uint8_t *rss)
 
     for(int i = 0; i < total_points; i++)
     {
-        vector<int> values;
+        vector<double> values;
 
-        int value = rss[i];//SsiSignal[i];
+        char value = rss[i];//SsiSignal[i];
         values.push_back(value);
 
         if(has_name)
@@ -128,17 +128,27 @@ int main(int argc, char* argv[])
         fakeAp(packet);
 
         uint16_t cntpacket;
-        uint8_t i;
-        uint8_t rss[1000];
+        uint16_t i;
+        char rss[100];
+        struct ManagementFrame *mgmtFrame;
         struct RadiotapHeader *radiotapH;
+        uint8_t type = mgmtFrame->frameCtrl.type;
+        uint8_t subtype = mgmtFrame->frameCtrl.subType;
         radiotapH = (struct RadiotapHeader *)packet;
+        mgmtFrame = (struct ManagementFrame *)(packet + radiotapH->length);
 
-        rss[i]=radiotapH->ssiSignal_1;
-        i++, cntpacket++;
-
-        if(cntpacket % 10 == 1)
+        if((type==0 && subtype==8) || (type==0 && subtype==4) || (type==0 && subtype==5))
         {
-            kmeanAlgo(cntpacket, rss);
+            cntpacket++;
+            rss[i]=radiotapH->ssiSignal_1;
+            i++;
+            if(cntpacket % 10 == 1)
+            {
+                if(cntpacket==100)
+                    break;
+
+                kmeanAlgo(cntpacket, rss);
+            }
         }
     }
     pcap_close(handle);

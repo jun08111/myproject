@@ -29,10 +29,10 @@ struct RadiotapHeader
         uint8_t    dataRate;
         uint16_t   channelFrequency;
         uint16_t   channelFlags;
-        int        ssiSignal_1;
+        char       ssiSignal_1;
         uint8_t    wtfTrash;   //strange stuff
         uint16_t   rxFlags;
-        int        ssiSignal_2;
+        uint8_t    ssiSignal_2;
         uint8_t    antenna;
 };
 
@@ -84,12 +84,12 @@ class Point
 {
 private:
     int id_point, id_cluster;
-    vector<int> values;
+    vector<double> values;
     int total_values;
     string name;
 
 public:
-    Point(int id_point, vector<int>& values, string name = "")
+    Point(int id_point, vector<double>& values, string name = "")
     {
         this->id_point = id_point;
         total_values = values.size();
@@ -116,7 +116,7 @@ public:
         return id_cluster;
     }
 
-    int getValue(int index)
+    double getValue(int index)
     {
         return values[index];
     }
@@ -126,7 +126,7 @@ public:
         return total_values;
     }
 
-    void addValue(int value)
+    void addValue(char value)
     {
         values.push_back(value);
     }
@@ -141,7 +141,7 @@ class Cluster
 {
 private:
     int id_cluster;
-    vector<int> central_values;
+    vector<double> central_values;
     vector<Point> points;
 
 public:
@@ -177,12 +177,12 @@ public:
         return false;
     }
 
-    int getCentralValue(int index)
+    char getCentralValue(int index)
     {
         return central_values[index];
     }
 
-    void setCentralValue(int index, int value)
+    void setCentralValue(int index, char value)
     {
         central_values[index] = value;
     }
@@ -213,7 +213,7 @@ private:
     // return ID of nearest center (uses euclidean distance)
     int getIDNearestCenter(Point point)
     {
-        int sum = 0.0, min_dist;
+        char sum = 0.0, min_dist;
         int id_cluster_center = 0;
 
         for(int i = 0; i < total_values; i++)
@@ -226,7 +226,7 @@ private:
 
         for(int i = 1; i < K; i++)
         {
-            int dist;
+            double dist;
             sum = 0.0;
 
             for(int j = 0; j < total_values; j++)
@@ -311,7 +311,7 @@ public:
                 for(int j = 0; j < total_values; j++)
                 {
                     int total_points_cluster = clusters[i].getTotalPoints();
-                    int sum = 0.0;
+                    double sum = 0.0;
 
                     if(total_points_cluster > 0)
                     {
@@ -338,12 +338,12 @@ public:
 
             for(int j = 0; j < total_values; j++)
             {
-                cout << setw(2) << hex << clusters[i].getCentralValue(j) << " \n"; //compare with WhiteList.RSS
+                cout /*<< setw(2) << hex*/ << clusters[i].getCentralValue(j) << " \n"; //compare with WhiteList.RSS
             }
         }
         cout << "\n";
     }
 };
 
-void fakeAp(const uint8_t *);
-void kmeanAlgo(uint16_t countpacket, uint8_t *rss);
+void fakeAp(const uint8_t *, uint16_t cntpacket);
+void kmeanAlgo(uint16_t countpacket, char *rss);
