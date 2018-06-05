@@ -32,7 +32,7 @@ struct RadiotapHeader
         char       ssiSignal_1;
         uint8_t    wtfTrash;   //strange stuff
         uint16_t   rxFlags;
-        uint8_t    ssiSignal_2;
+        char       ssiSignal_2;
         uint8_t    antenna;
 };
 
@@ -126,7 +126,7 @@ public:
         return total_values;
     }
 
-    void addValue(char value)
+    void addValue(double value)
     {
         values.push_back(value);
     }
@@ -177,12 +177,12 @@ public:
         return false;
     }
 
-    char getCentralValue(int index)
+    double getCentralValue(int index)
     {
         return central_values[index];
     }
 
-    void setCentralValue(int index, char value)
+    void setCentralValue(int index, double value)
     {
         central_values[index] = value;
     }
@@ -213,7 +213,7 @@ private:
     // return ID of nearest center (uses euclidean distance)
     int getIDNearestCenter(Point point)
     {
-        char sum = 0.0, min_dist;
+        double sum = 0.0, min_dist;
         int id_cluster_center = 0;
 
         for(int i = 0; i < total_values; i++)
@@ -311,7 +311,7 @@ public:
                 for(int j = 0; j < total_values; j++)
                 {
                     int total_points_cluster = clusters[i].getTotalPoints();
-                    double sum = 0.0;
+                    int sum = 0.0;
 
                     if(total_points_cluster > 0)
                     {
@@ -345,5 +345,5 @@ public:
     }
 };
 
-void fakeAp(const uint8_t *, uint16_t cntpacket);
+void fakeAp(const uint8_t *);
 void kmeanAlgo(uint16_t countpacket, char *rss);

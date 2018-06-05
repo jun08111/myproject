@@ -49,11 +49,11 @@ void kmeanAlgo(uint16_t countpacket, char *rss)
 {
     srand (time(NULL));
 
-    uint16_t total_points = countpacket;//countpacket;
+    int total_points = countpacket;//countpacket;
     int K = 3;
     int total_values = 1;
     int has_name = 0;
-    int max_iterations = 500;
+    int max_iterations = 1000;
 
     vector<Point> points;
     string point_name;
@@ -63,7 +63,7 @@ void kmeanAlgo(uint16_t countpacket, char *rss)
     {
         vector<double> values;
 
-        char value = rss[i];//SsiSignal[i];
+        double value = rss[i];//SsiSignal[i];
         values.push_back(value);
 
         if(has_name)
@@ -88,6 +88,7 @@ int main(int argc, char* argv[])
     char errbuf[PCAP_ERRBUF_SIZE];
     struct pcap_pkthdr *header;
     const uint8_t *packet;
+    uint16_t cntApRss=0;
 
     if (argc != 2)
     {
@@ -127,9 +128,7 @@ int main(int argc, char* argv[])
 
         fakeAp(packet);
 
-        uint16_t cntpacket;
-        uint16_t i;
-        char rss[100];
+        char rss[1000];
         struct ManagementFrame *mgmtFrame;
         struct RadiotapHeader *radiotapH;
         uint8_t type = mgmtFrame->frameCtrl.type;
@@ -139,17 +138,17 @@ int main(int argc, char* argv[])
 
         if((type==0 && subtype==8) || (type==0 && subtype==4) || (type==0 && subtype==5))
         {
-            cntpacket++;
-            rss[i]=radiotapH->ssiSignal_1;
-            i++;
-            if(cntpacket % 10 == 1)
+            rss[cntApRss]=radiotapH->ssiSignal_1;
+            cntApRss++;
+            printf("rss: %d, cnt: %d\n", radiotapH->ssiSignal_1, cntApRss);
+            if(cntApRss % 9 == 1)
             {
-                if(cntpacket==100)
-                    break;
-
-                kmeanAlgo(cntpacket, rss);
+                printf("%d\n", cntApRss);
+                kmeanAlgo(cntApRss, rss);
             }
         }
+
+
     }
     pcap_close(handle);
     return 0;
