@@ -1,4 +1,29 @@
 #include "main.h"
+#include "kmeans.h"
+
+void threadKmean(const uint8_t *packet)
+{
+    static uint16_t cntApRss=0; //static: using cntApRss=0  1 time
+    char rss[1000];
+    struct ManagementFrame *mgmtFrame;
+    struct RadiotapHeader *radiotapH;
+    radiotapH = (struct RadiotapHeader *)packet;
+    mgmtFrame = (struct ManagementFrame *)(packet + radiotapH->length);
+    uint8_t type = mgmtFrame->frameCtrl.type;
+    uint8_t subtype = mgmtFrame->frameCtrl.subType;
+
+    if((type==0 && subtype==8) || (type==0 && subtype==4) || (type==0 && subtype==5))
+    {
+        rss[cntApRss]=radiotapH->ssiSignal_1;
+        cntApRss++;
+        printf("rss: %d, cnt: %d\n", radiotapH->ssiSignal_1, cntApRss);
+        if(cntApRss % 9 == 1)
+        {
+            printf("%d\n", cntApRss);
+            kmeanAlgo(cntApRss, rss);
+        }
+    }
+}
 
 void fakeAp(const uint8_t *packet)
 {
@@ -88,8 +113,6 @@ int main(int argc, char* argv[])
     char errbuf[PCAP_ERRBUF_SIZE];
     struct pcap_pkthdr *header;
     const uint8_t *packet;
-    uint16_t cntApRss=0;
-
     if (argc != 2)
     {
         cout << "Usage: " <<* argv << " <Device>" << endl;
@@ -127,27 +150,8 @@ int main(int argc, char* argv[])
         }
 
         fakeAp(packet);
-
-        char rss[1000];
-        struct ManagementFrame *mgmtFrame;
-        struct RadiotapHeader *radiotapH;
-        uint8_t type = mgmtFrame->frameCtrl.type;
-        uint8_t subtype = mgmtFrame->frameCtrl.subType;
-        radiotapH = (struct RadiotapHeader *)packet;
-        mgmtFrame = (struct ManagementFrame *)(packet + radiotapH->length);
-
-        if((type==0 && subtype==8) || (type==0 && subtype==4) || (type==0 && subtype==5))
-        {
-            rss[cntApRss]=radiotapH->ssiSignal_1;
-            cntApRss++;
-            printf("rss: %d, cnt: %d\n", radiotapH->ssiSignal_1, cntApRss);
-            if(cntApRss % 9 == 1)
-            {
-                printf("%d\n", cntApRss);
-                kmeanAlgo(cntApRss, rss);
-            }
-        }
-
+        thread kthread(&threadKmean, packet);
+        kthread.join();
 
     }
     pcap_close(handle);

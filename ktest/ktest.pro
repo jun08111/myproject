@@ -6,6 +6,7 @@ CONFIG -= qt
 SOURCES += \
         main.cpp
 LIBS += -lpcap
-
+LIBS += -lpthread
 HEADERS += \
-    main.h
+    main.h \
+    kmeans.h
