@@ -242,17 +242,15 @@ public:
 
             if(done == true || iter >= max_iterations)
             {
-                cout << "Break in iteration " << iter << "\n";
-                break;
+                break; //Break in iteration
             }
-
             iter++;
         }
 
         // shows elements of clusters
         for(int i = 0; i < K; i++)
         {
-            cout << "AP" << clusters[i].getID() + 1 << " RSS: ";
+            cout << "Average RSS of AP" << clusters[i].getID() + 1 <<": " ;
 
             for(int j = 0; j < total_values; j++)
             {

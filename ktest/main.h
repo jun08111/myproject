@@ -82,5 +82,5 @@ struct WifiName
 #pragma pack(pop)
 
 
-void fakeAp(const uint8_t *packet);
+void fakeAp(const uint8_t *packet, uint16_t *cntApRss, char *rss);
 void kmeanAlgo(uint16_t cntApRss, char *rss);

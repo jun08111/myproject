@@ -1,31 +1,7 @@
 #include "main.h"
 #include "kmeans.h"
 
-void threadKmean(const uint8_t *packet)
-{
-    static uint16_t cntApRss=0; //static: using cntApRss=0  1 time
-    char rss[1000];
-    struct ManagementFrame *mgmtFrame;
-    struct RadiotapHeader *radiotapH;
-    radiotapH = (struct RadiotapHeader *)packet;
-    mgmtFrame = (struct ManagementFrame *)(packet + radiotapH->length);
-    uint8_t type = mgmtFrame->frameCtrl.type;
-    uint8_t subtype = mgmtFrame->frameCtrl.subType;
-
-    if((type==0 && subtype==8) || (type==0 && subtype==4) || (type==0 && subtype==5))
-    {
-        rss[cntApRss]=radiotapH->ssiSignal_1;
-        cntApRss++;
-        printf("rss: %d, cnt: %d\n", radiotapH->ssiSignal_1, cntApRss);
-        if(cntApRss % 9 == 1)
-        {
-            printf("%d\n", cntApRss);
-            kmeanAlgo(cntApRss, rss);
-        }
-    }
-}
-
-void fakeAp(const uint8_t *packet)
+void fakeAp(const uint8_t *packet, uint16_t *cntApRss, char *rss)
 {
     struct ManagementFrame *mgmtFrame;
     struct RadiotapHeader *radiotapH;
@@ -43,6 +19,7 @@ void fakeAp(const uint8_t *packet)
     if(type==0 && subtype==8)  //BeconFrame
     {
         //BSSID***********************************************************************************//
+        printf("--------------------------------------------------------------\n");
         printf("BSSID: ");
         for(int i=0; i<6; i++)
         {
@@ -66,19 +43,33 @@ void fakeAp(const uint8_t *packet)
 
         //Sequence Control*************************************************************************//
         printf("Sequence Control: %04x", ntohs(mgmtFrame->seq_ctrl));
-        printf("\n\n");
+        printf("\n");
+
+        //rss, conunt rss(cnt), avg of rss(AP1)****************************************************//
+        if((type==0 && subtype==8) || (type==0 && subtype==4) || (type==0 && subtype==5))
+        {
+            rss[*cntApRss]=radiotapH->ssiSignal_1;
+            printf("rss: %d, count: %d\n\n", radiotapH->ssiSignal_1, *cntApRss);
+            (*cntApRss)++;
+
+            if(*cntApRss % 10 == 1 && *cntApRss != 1) //10 cycle
+            {
+                kmeanAlgo(*cntApRss, rss);
+            }
+        }
     }
+
 }
 
-void kmeanAlgo(uint16_t countpacket, char *rss)
+void kmeanAlgo(uint16_t cntApRss, char *rss)
 {
     srand (time(NULL));
 
-    int total_points = countpacket;//countpacket;
-    int K = 3;
+    int total_points = cntApRss;//countpacket
+    int K = 1;
     int total_values = 1;
     int has_name = 0;
-    int max_iterations = 1000;
+    int max_iterations = 100;//Stop when you check 1000 rss
 
     vector<Point> points;
     string point_name;
@@ -113,6 +104,7 @@ int main(int argc, char* argv[])
     char errbuf[PCAP_ERRBUF_SIZE];
     struct pcap_pkthdr *header;
     const uint8_t *packet;
+
     if (argc != 2)
     {
         cout << "Usage: " <<* argv << " <Device>" << endl;
@@ -135,6 +127,8 @@ int main(int argc, char* argv[])
         return 2;
     }
 
+    uint16_t cntApRss = 1;
+    char rss[1000];
     while(int result = pcap_next_ex(handle, &header, &packet) >=0)
     {
         if(result == 0)       //Timeout expired, There is no packet.
@@ -149,9 +143,7 @@ int main(int argc, char* argv[])
             break;
         }
 
-        fakeAp(packet);
-        thread kthread(&threadKmean, packet);
-        kthread.join();
+        fakeAp(packet, &cntApRss, rss);
 
     }
     pcap_close(handle);
